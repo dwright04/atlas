@@ -101,16 +101,11 @@ def plotROC(y_true, labels, *args):
     f = []
     m = []
     for t in [0.01, 0.05, 0.1]:
-      print(t)
-    #print thresholds
-    
-    #print np.where(fpr<=t)[0][0]
-    #print "decision boundary: ", thresholds[np.where(fpr<=t)[0][0]]
-    #print fpr[np.where(fpr<=t)[0]][0]
-      print("mdr: ", 1-tpr[np.where(fpr<=t)[0]][0])
+      print("")
+      print("%d%% fpr gives " % (int(t*100)) + str((1-tpr[np.where(fpr<=t)[0]][0])*100) + "% mdr")
       m.append(1-tpr[np.where(fpr<=t)[0]][0])
     #print np.where(1-tpr<=t)
-      print("fpr: ", fpr[np.where(1-tpr<=t)[0]][-1])
+      print("%d%% mdr gives " % (int(t*100)) + str(fpr[np.where(1-tpr<=t)[0]][-1]*100) + "% fpr")
       f.append(fpr[np.where(1-tpr<=t)[0]][-1])
     if labels[i] == "combined":
       ax1.plot(1-tpr, fpr, color="k", lw=lw,zorder=100)
