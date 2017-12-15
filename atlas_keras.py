@@ -56,6 +56,7 @@ def create_model(num_classes, image_dim):
   model.add(Dense(num_classes, activation='softmax'))
   model.compile(loss='categorical_crossentropy', optimizer='adam', \
                 kerasmetrics=['accuracy'])
+  print(model.summary())
   return model
 
 def main():
