@@ -37,24 +37,20 @@ def precision_recall_curve(y_true, y, pos_label, step=0.04):
   recall    = np.zeros(thresholds.shape)
 
   for i,threshold in enumerate(thresholds):
-  #print np.where(y[pos_indices] >  threshold)[0].shape
     tp = float(np.where(y[pos_indices] >  threshold)[0].shape[0])
     fp = float(np.where(y[neg_indices] >  threshold)[0].shape[0])
     fn = float(np.where(y[pos_indices] <= threshold)[0].shape[0])
-    #print tp, fp, fn
     try:
       precision[i] += tp / (tp + fp)
       recall[i]    += tp / (tp + fn)
     except ZeroDivisionError:
       print(threshold)
-      #precision = np.concatenate((precision,np.array([1])))
-   #recall = np.concatenate((recall,np.array([0])))
 
     precision = np.concatenate((precision,np.array([1])))
     recall = np.concatenate((recall,np.array([0])))
   return precision, recall, thresholds
 
-def roc_curve(y_true, y, step=0.01):
+def roc_curve(y_true, y, step=1e-4):
 
   pos_indices = np.where(y_true == 1)
   neg_indices = np.where(y_true == 0)
@@ -73,11 +69,8 @@ def roc_curve(y_true, y, step=0.01):
       tpr[i] += float(np.where(y[pos_indices] >= threshold)[0].shape[0]) / pos_indices[0].shape[0]
     except ZeroDivisionError:
       tpr[i] += 0
-    
-    fpr = np.concatenate((fpr,np.array([0])))
-    tpr = np.concatenate((tpr,np.array([0])))
 
-  return fpr, tpr, thresholds
+  return np.array(fpr), np.array(tpr), np.array(thresholds)
     
 def plotROC(y_true, labels, *args):
 
@@ -96,16 +89,16 @@ def plotROC(y_true, labels, *args):
 
   for i,y in enumerate(args):
 
-    precision, recall, _, fpr, tpr, thresholds = plot_roc_curve(y_true, y)
-    print(labels[i])
+    precision, recall, pr_thresholds, fpr, tpr, thresholds = plot_roc_curve(y_true, y)
     f = []
     m = []
     for t in [0.01, 0.05, 0.1]:
       print("")
-      print("%d%% fpr gives " % (int(t*100)) + str((1-tpr[np.where(fpr<=t)[0]][0])*100) + "% mdr")
+      print("[+] %.3lf%% fpr gives " % (int(t*100)) + str((1-tpr[np.where(fpr<=t)[0]][0])*100) + "% mdr")
+      print("   [+] threshold : %.3lf"%(thresholds[np.where(fpr<=t)[0]][0]))
       m.append(1-tpr[np.where(fpr<=t)[0]][0])
-    #print np.where(1-tpr<=t)
-      print("%d%% mdr gives " % (int(t*100)) + str(fpr[np.where(1-tpr<=t)[0]][-1]*100) + "% fpr")
+      print("[+]%.3lf%% mdr gives " % (int(t*100)) + str(fpr[np.where(1-tpr<=t)[0]][-1]*100) + "% fpr")
+      print("   [+] threshold : %.3lf"%(thresholds[np.where(1-tpr<=t)[0]][-1]))
       f.append(fpr[np.where(1-tpr<=t)[0]][-1])
     if labels[i] == "combined":
       ax1.plot(1-tpr, fpr, color="k", lw=lw,zorder=100)
@@ -123,9 +116,6 @@ def plotROC(y_true, labels, *args):
   ax1.legend()
   plt.show()
 
-  #print("swap_combined_fpr_r = [%lf, %lf, %lf]" % (f[0], f[1], f[2]))
-  #print("swap_combined_mdr_r = [%lf, %lf, %lf]" % (m[0], m[1], m[2]))
-
 def main():
   parser = optparse.OptionParser("[!] usage: python plotROC.py\n"+\
                                  "           -f <prediction file>")
@@ -136,6 +126,9 @@ def main():
   (options, args) = parser.parse_args()
 
   predictionFile = options.predictionFile
+  if predictionFile == None:
+    print(parser.usage)
+    exit()
 
   files  = []
   y_true = []
@@ -150,9 +143,6 @@ def main():
 
   y_true = np.array(y_true)
   preds  = np.array(preds)
-
-  print(y_true)
-  print(preds)
 
   plotROC(y_true, [predictionFile], preds)
 
